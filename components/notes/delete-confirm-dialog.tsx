@@ -38,7 +38,6 @@ export function DeleteConfirmDialog({
             <DialogContent
                 className="sm:max-w-[425px]"
                 onKeyDown={handleKeyDown}
-                showCloseButton={!isLoading}
             >
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">

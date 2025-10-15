@@ -13,14 +13,15 @@ import { SearchInput } from '@/components/notes/search-input'
 import { NotesSort as NotesSortComponent } from '@/components/notes/notes-sort'
 
 interface NotesPageProps {
-    searchParams: {
+    searchParams: Promise<{
         search?: string
         sort?: NotesSort
         page?: string
-    }
+    }>
 }
 
-export default async function NotesPage({ searchParams }: NotesPageProps) {
+export default async function NotesPage({ searchParams: searchParamsPromise }: NotesPageProps) {
+    const searchParams = await searchParamsPromise
     // 로그인 확인
     const supabase = await createClient()
     const {

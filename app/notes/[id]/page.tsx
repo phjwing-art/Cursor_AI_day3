@@ -8,6 +8,9 @@ export default async function NoteDetailPage({
 }: {
     params: Promise<{ id: string }>
 }) {
+    const { id } = await params
+
+    // 로그인 확인
     const supabase = await createClient()
     const {
         data: { user },
@@ -18,16 +21,12 @@ export default async function NoteDetailPage({
         redirect('/signin')
     }
 
-    const { id } = await params
+    // 노트 조회
     const note = await getNoteById(id)
+
     if (!note) {
         notFound()
     }
 
     return <NoteEditor note={note} />
-}
-
-export const metadata = {
-    title: '노트 상세 - AI 메모장',
-    description: '노트 상세 보기'
 }

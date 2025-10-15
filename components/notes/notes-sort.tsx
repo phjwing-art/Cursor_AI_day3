@@ -3,7 +3,7 @@
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { ArrowUpDown, Calendar, Clock, Type } from 'lucide-react'
-import { NotesSort } from '@/lib/notes/queries'
+import type { NotesSort } from '@/lib/notes/queries'
 
 interface NotesSortProps {
     currentSort: NotesSort

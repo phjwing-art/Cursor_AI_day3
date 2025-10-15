@@ -126,10 +126,11 @@ export class GeminiClient {
 
     async generateTextStream(request: GenerationRequest): Promise<AsyncIterable<string>> {
         try {
-            const response = await this.client.models.generateContentStream({
-                model: this.config.model,
-                contents: request.prompt,
-                config: {
+            const model = this.client.getGenerativeModel({ model: this.config.model })
+            
+            const result = await model.generateContentStream({
+                contents: [{ role: 'user', parts: [{ text: request.prompt }] }],
+                generationConfig: {
                     maxOutputTokens: request.maxTokens || this.config.maxTokens,
                     temperature: request.temperature || 0.7,
                     topP: request.topP || 0.9,
@@ -137,7 +138,16 @@ export class GeminiClient {
                 }
             })
 
-            return response as AsyncIterable<string>
+            async function* streamGenerator() {
+                for await (const chunk of result.stream) {
+                    const text = chunk.text()
+                    if (text) {
+                        yield text
+                    }
+                }
+            }
+
+            return streamGenerator()
         } catch (error) {
             throw this.handleError(error)
         }

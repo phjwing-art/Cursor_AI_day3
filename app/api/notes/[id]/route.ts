@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
 export async function PUT(
-    request: NextRequest,
-    { params }: { params: { id: string } }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const supabase = await createClient()
@@ -17,7 +17,7 @@ export async function PUT(
             )
         }
 
-        const noteId = params.id
+        const { id: noteId } = await params
         const { title, content } = await request.json()
 
         // 노트 소유권 확인
@@ -66,8 +66,8 @@ export async function PUT(
 }
 
 export async function DELETE(
-    request: NextRequest,
-    { params }: { params: { id: string } }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const supabase = await createClient()
@@ -81,7 +81,7 @@ export async function DELETE(
             )
         }
 
-        const noteId = params.id
+        const { id: noteId } = await params
 
         // 노트 소유권 확인
         const { data: note, error: noteError } = await supabase

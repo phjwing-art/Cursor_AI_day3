@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from 'react'
 
 interface UseAutoSaveProps {
-    noteId: string
     title: string
     content: string
     onSave: (data: { title: string; content: string }) => Promise<void>
@@ -11,7 +10,6 @@ interface UseAutoSaveProps {
 }
 
 export function useAutoSave({
-    noteId,
     title,
     content,
     onSave,

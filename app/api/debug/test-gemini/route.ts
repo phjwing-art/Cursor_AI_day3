@@ -1,10 +1,10 @@
 // app/api/debug/test-gemini/route.ts
 // Gemini API 테스트 엔드포인트
 
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { GeminiClient } from '@/lib/ai'
 
-export async function GET(request: NextRequest) {
+export async function GET() {
     try {
         console.log('Gemini API 테스트 시작')
         
@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
         const healthResult = await geminiClient.healthCheck()
         console.log('헬스체크 결과:', healthResult)
         
-        if (!healthResult.healthy) {
+        if (!healthResult.isHealthy) {
             return NextResponse.json({
                 success: false,
                 error: 'Gemini API 헬스체크 실패',

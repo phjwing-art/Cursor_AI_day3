@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { AutoResizeTextarea } from './auto-resize-textarea'
 import { SaveStatus } from './save-status'
@@ -21,7 +20,6 @@ import { cn } from '@/lib/utils'
 import { generateSummary, getNoteSummary } from '@/lib/notes/actions'
 import { generateTags, getNoteTags } from '@/lib/notes/tag-actions'
 import type { Note } from '@/lib/notes/queries'
-import type { Summary, Tag } from '@/lib/db/schema/notes'
 
 interface NoteEditorProps {
     note: Note
@@ -32,20 +30,26 @@ export function NoteEditor({ note, className }: NoteEditorProps) {
     const [isEditingTitle, setIsEditingTitle] = useState(false)
     const [title, setTitle] = useState(note.title || '')
     const [content, setContent] = useState(note.content || '')
-    const [summary, setSummary] = useState<Summary | null>(null)
+    const [summary, setSummary] = useState<{
+        id: string
+        content: string
+        created_at: string
+    } | null>(null)
     const [summaryStatus, setSummaryStatus] = useState<'idle' | 'loading' | 'error'>('idle')
     const [summaryError, setSummaryError] = useState<string>('')
-    const [tags, setTags] = useState<Tag[]>([])
+    const [tags, setTags] = useState<Array<{
+        id: string
+        name: string
+        created_at: string
+    }>>([])
     const [tagStatus, setTagStatus] = useState<'idle' | 'loading' | 'error'>('idle')
     const [tagError, setTagError] = useState<string>('')
     const [isEditingTags, setIsEditingTags] = useState(false)
 
-    const { 
-        isSaving, 
-        lastSaved, 
-        saveNote 
-    } = useAutoSave({
-        noteId: note.id,
+           const { 
+               isSaving, 
+               lastSaved
+           } = useAutoSave({
         title,
         content,
         onSave: async (data) => {
@@ -210,7 +214,7 @@ export function NoteEditor({ note, className }: NoteEditorProps) {
         }
     }
 
-    const handleTagSuccess = (_newTags: string[]) => {
+           const handleTagSuccess = () => {
         const loadTags = async () => {
             try {
                 const result = await getNoteTags(note.id)

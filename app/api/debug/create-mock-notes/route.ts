@@ -1,7 +1,7 @@
 // app/api/debug/create-mock-notes/route.ts
 // 목업 노트 데이터 생성 API
 
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
 const mockNotes = [
@@ -47,7 +47,7 @@ const mockNotes = [
     }
 ]
 
-export async function POST(request: NextRequest) {
+export async function POST() {
     try {
         const supabase = await createClient()
         

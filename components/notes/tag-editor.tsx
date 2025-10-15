@@ -47,25 +47,25 @@ export function TagEditor({
         setError(null)
     }
 
-    const handleSaveTags = async () => {
-        setIsSaving(true)
-        setError(null)
-        try {
-            const result = await updateTags(noteId, currentTags)
-            if (result.success) {
-                onSuccess && onSuccess(currentTags)
-            } else {
-                setError(result.error || '태그 저장에 실패했습니다.')
-                onError && onError(result.error || '태그 저장에 실패했습니다.')
-            }
-        } catch (err) {
-            console.error('태그 저장 중 오류 발생:', err)
-            setError('태그 저장 중 예상치 못한 오류가 발생했습니다.')
-            onError && onError('태그 저장 중 예상치 못한 오류가 발생했습니다.')
-        } finally {
-            setIsSaving(false)
-        }
-    }
+           const handleSaveTags = async () => {
+               setIsSaving(true)
+               setError(null)
+               try {
+                   const result = await updateTags(noteId, currentTags)
+                   if (result.success) {
+                       onSuccess?.(currentTags)
+                   } else {
+                       setError(result.error || '태그 저장에 실패했습니다.')
+                       onError?.(result.error || '태그 저장에 실패했습니다.')
+                   }
+               } catch (err) {
+                   console.error('태그 저장 중 오류 발생:', err)
+                   setError('태그 저장 중 예상치 못한 오류가 발생했습니다.')
+                   onError?.('태그 저장 중 예상치 못한 오류가 발생했습니다.')
+               } finally {
+                   setIsSaving(false)
+               }
+           }
 
     return (
         <div className={`space-y-4 ${className}`}>
