@@ -5,8 +5,6 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { LogoutDialog } from '@/components/auth/logout-dialog'
 import { PenTool, Search, Tag, Download } from 'lucide-react'
 import Link from 'next/link'
-import { NotesList } from '@/components/notes/notes-list'
-import { getUserNotesPaginated } from '@/lib/notes/queries'
 
 export default async function HomePage() {
     // 로그인 확인 - getUser()를 사용하여 서버에서 인증 확인
@@ -20,22 +18,8 @@ export default async function HomePage() {
         redirect('/signin')
     }
 
-    // 노트 데이터 가져오기
-    let notes = []
-    let totalCount = 0
-    
-    try {
-        const result = await getUserNotesPaginated({
-            page: 1,
-            limit: 10
-        })
-        notes = result.notes || []
-        totalCount = result.totalCount || 0
-    } catch (error) {
-        console.error('노트 데이터 로드 실패:', error)
-        notes = []
-        totalCount = 0
-    }
+    // 노트 데이터는 클라이언트에서 로드하도록 변경
+    // 서버 사이드에서 데이터베이스 연결 문제를 피하기 위해
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -135,27 +119,19 @@ export default async function HomePage() {
                         </Link>
                     </div>
                     
-                    {Array.isArray(notes) && notes.length > 0 ? (
-                        <NotesList 
-                            notes={notes} 
-                            totalCount={totalCount}
-                            showPagination={false}
-                        />
-                    ) : (
-                        <Card>
-                            <CardContent className="text-center py-12">
-                                <PenTool className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                                <h3 className="text-lg font-medium text-gray-900 mb-2">아직 노트가 없습니다</h3>
-                                <p className="text-gray-600 mb-4">첫 번째 노트를 작성해보세요!</p>
-                                <Link href="/notes/new">
-                                    <Button>
-                                        <PenTool className="h-4 w-4 mr-2" />
-                                        새 노트 작성
-                                    </Button>
-                                </Link>
-                            </CardContent>
-                        </Card>
-                    )}
+                    <Card>
+                        <CardContent className="text-center py-12">
+                            <PenTool className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                            <h3 className="text-lg font-medium text-gray-900 mb-2">노트를 확인하려면</h3>
+                            <p className="text-gray-600 mb-4">모든 노트 페이지에서 확인하실 수 있습니다.</p>
+                            <Link href="/notes">
+                                <Button>
+                                    <PenTool className="h-4 w-4 mr-2" />
+                                    노트 보기
+                                </Button>
+                            </Link>
+                        </CardContent>
+                    </Card>
                 </div>
             </div>
         </div>
