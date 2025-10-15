@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-// 사스(SaaS) 랜딩 페이지에는 Card UI 대신 Hero section 및 CTA 섹션 등만 있으므로 Card 관련 import 전체 삭제
 import { Button } from '@/components/ui/button'
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { LogoutDialog } from '@/components/auth/logout-dialog'
 import { PenTool, Search, Tag, Download } from 'lucide-react'
 import Link from 'next/link'

@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
         const healthResult = await geminiClient.healthCheck()
         console.log('헬스체크 결과:', healthResult)
         
-        if (!healthResult.healthy) {
+        if (!healthResult.isHealthy) {
             return NextResponse.json({
                 success: false,
                 error: 'Gemini API 헬스체크 실패',

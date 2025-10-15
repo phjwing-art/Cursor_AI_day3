@@ -1,7 +1,7 @@
 import { pgTable, uuid, text, timestamp } from 'drizzle-orm/pg-core'
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod'
 import { relations } from 'drizzle-orm'
-import { z } from 'zod'
+// import { z } from 'zod'
 
 export const notes = pgTable('notes', {
     id: uuid('id').defaultRandom().primaryKey(),
@@ -41,6 +41,16 @@ export const summaries = pgTable('summaries', {
         .notNull()
 })
 
+// tags 테이블 스키마
+export const tags = pgTable('tags', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    noteId: uuid('note_id').notNull().references(() => notes.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+        .defaultNow()
+        .notNull()
+})
+
 // Zod 스키마 자동 생성
 export const insertSummarySchema = createInsertSchema(summaries, {
     content: z => z.min(1, '요약 내용을 입력해주세요').max(2000, '요약은 2,000자 이내로 입력해주세요')
@@ -51,14 +61,32 @@ export const selectSummarySchema = createSelectSchema(summaries)
 export type Summary = typeof summaries.$inferSelect
 export type NewSummary = typeof summaries.$inferInsert
 
+// tags 테이블 Zod 스키마
+export const insertTagSchema = createInsertSchema(tags, {
+    name: z => z.min(1, '태그명을 입력해주세요').max(50, '태그명은 50자 이내로 입력해주세요')
+})
+
+export const selectTagSchema = createSelectSchema(tags)
+
+export type Tag = typeof tags.$inferSelect
+export type NewTag = typeof tags.$inferInsert
+
 // 관계 정의
 export const notesRelations = relations(notes, ({ many }) => ({
-    summaries: many(summaries)
+    summaries: many(summaries),
+    tags: many(tags)
 }))
 
 export const summariesRelations = relations(summaries, ({ one }) => ({
     note: one(notes, {
         fields: [summaries.noteId],
+        references: [notes.id]
+    })
+}))
+
+export const tagsRelations = relations(tags, ({ one }) => ({
+    note: one(notes, {
+        fields: [tags.noteId],
         references: [notes.id]
     })
 }))
