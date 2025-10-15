@@ -1,7 +1,6 @@
 import { pgTable, uuid, text, timestamp } from 'drizzle-orm/pg-core'
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod'
 import { relations } from 'drizzle-orm'
-import { z } from 'zod'
 
 export const notes = pgTable('notes', {
     id: uuid('id').defaultRandom().primaryKey(),
@@ -16,10 +15,7 @@ export const notes = pgTable('notes', {
         .notNull()
 })
 
-export const insertNoteSchema = createInsertSchema(notes, {
-    title: z.string().min(1, '제목을 입력해주세요').max(200, '제목은 200자 이내로 입력해주세요').nullable(),
-    content: z.string().min(1, '내용을 입력해주세요').nullable()
-})
+export const insertNoteSchema = createInsertSchema(notes)
 export const selectNoteSchema = createSelectSchema(notes)
 export type Note = typeof notes.$inferSelect
 export type NewNote = typeof notes.$inferInsert
@@ -33,9 +29,7 @@ export const summaries = pgTable('summaries', {
         .notNull()
 })
 
-export const insertSummarySchema = createInsertSchema(summaries, {
-    content: z.string().min(1, '요약 내용을 입력해주세요')
-})
+export const insertSummarySchema = createInsertSchema(summaries)
 export const selectSummarySchema = createSelectSchema(summaries)
 export type Summary = typeof summaries.$inferSelect
 export type NewSummary = typeof summaries.$inferInsert
@@ -51,9 +45,7 @@ export const tags = pgTable('tags', {
 })
 
 // tags 테이블 Zod 스키마
-export const insertTagSchema = createInsertSchema(tags, {
-    name: z.string().min(1, '태그명을 입력해주세요').max(50, '태그명은 50자 이내로 입력해주세요')
-})
+export const insertTagSchema = createInsertSchema(tags)
 export const selectTagSchema = createSelectSchema(tags)
 export type Tag = typeof tags.$inferSelect
 export type NewTag = typeof tags.$inferInsert
