@@ -3,8 +3,7 @@ import { redirect } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { LogoutDialog } from '@/components/auth/logout-dialog'
-import { QRCodeComponent } from '@/components/ui/qr-code'
-import { PenTool, Search, Tag, Download, QrCode } from 'lucide-react'
+import { PenTool, Search, Tag, Download } from 'lucide-react'
 import Link from 'next/link'
 
 export default async function HomePage() {
@@ -64,24 +63,6 @@ export default async function HomePage() {
                         </Card>
                     </div>
 
-                    {/* QR 코드 섹션 */}
-                    <div className="mb-8 sm:mb-12">
-                        <div className="text-center mb-6">
-                            <div className="flex items-center justify-center mb-2">
-                                <QrCode className="h-6 w-6 text-blue-600 mr-2" />
-                                <h3 className="text-xl font-semibold text-gray-900">모바일에서 빠르게 접속</h3>
-                            </div>
-                            <p className="text-gray-600 text-sm sm:text-base">
-                                QR 코드를 스캔하여 모바일에서 바로 접속하세요
-                            </p>
-                        </div>
-                        <QRCodeComponent 
-                            url="https://ai-memo-hands-on.vercel.app"
-                            title="AI 메모장"
-                            description="QR 코드를 스캔하여 모바일에서 접속하세요"
-                            size={180}
-                        />
-                    </div>
 
                     {/* 액션 섹션 */}
                     <Card className="max-w-lg mx-auto">
