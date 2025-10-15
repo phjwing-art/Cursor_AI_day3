@@ -3,7 +3,8 @@ import { redirect } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { LogoutDialog } from '@/components/auth/logout-dialog'
-import { PenTool, Search, Tag, Download, Code, Database, Zap, Shield } from 'lucide-react'
+import { getUserNotesPaginated } from '@/lib/notes/queries'
+import { PenTool, Search, Tag, Download, Code, Database, Zap, Shield, User } from 'lucide-react'
 import Link from 'next/link'
 
 export default async function HomePage() {
@@ -97,6 +98,16 @@ export default async function HomePage() {
         )
     }
 
+    // 최근 노트 가져오기
+    let recentNotes = []
+    try {
+        const result = await getUserNotesPaginated({ page: 1, limit: 5 })
+        recentNotes = result.notes || []
+    } catch (error) {
+        console.error('최근 노트 로드 실패:', error)
+        recentNotes = []
+    }
+
     // 로그인된 사용자를 위한 대시보드
     return (
         <div className="min-h-screen bg-gray-50">
@@ -107,7 +118,11 @@ export default async function HomePage() {
                         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">AI 메모장</h1>
                         <p className="text-gray-600 mt-1 sm:mt-2 text-sm sm:text-base">지능형 메모 관리 시스템</p>
                     </div>
-                    <div className="flex justify-end">
+                    <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <User className="h-4 w-4" />
+                            <span>{user.email}</span>
+                        </div>
                         <LogoutDialog />
                     </div>
                 </div>
@@ -126,65 +141,73 @@ export default async function HomePage() {
 
                 {/* 기능 카드들 */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
-                    <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-                        <CardHeader className="pb-3">
-                            <div className="flex items-center justify-between">
-                                <PenTool className="h-8 w-8 text-blue-600" />
-                                <span className="text-sm text-blue-600 font-medium">새 노트</span>
-                            </div>
-                        </CardHeader>
-                        <CardContent>
-                            <h3 className="font-semibold text-gray-900 mb-2">빠른 메모 작성</h3>
-                            <p className="text-sm text-gray-600">
-                                아이디어를 즉시 기록하고 정리하세요
-                            </p>
-                        </CardContent>
-                    </Card>
+                    <Link href="/notes/new">
+                        <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
+                            <CardHeader className="pb-3">
+                                <div className="flex items-center justify-between">
+                                    <PenTool className="h-8 w-8 text-blue-600" />
+                                    <span className="text-sm text-blue-600 font-medium">새 노트</span>
+                                </div>
+                            </CardHeader>
+                            <CardContent>
+                                <h3 className="font-semibold text-gray-900 mb-2">빠른 메모 작성</h3>
+                                <p className="text-sm text-gray-600">
+                                    아이디어를 즉시 기록하고 정리하세요
+                                </p>
+                            </CardContent>
+                        </Card>
+                    </Link>
 
-                    <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-                        <CardHeader className="pb-3">
-                            <div className="flex items-center justify-between">
-                                <Search className="h-8 w-8 text-green-600" />
-                                <span className="text-sm text-green-600 font-medium">검색</span>
-                            </div>
-                        </CardHeader>
-                        <CardContent>
-                            <h3 className="font-semibold text-gray-900 mb-2">스마트 검색</h3>
-                            <p className="text-sm text-gray-600">
-                                AI가 이해하는 지능형 검색으로 원하는 내용을 빠르게 찾으세요
-                            </p>
-                        </CardContent>
-                    </Card>
+                    <Link href="/notes">
+                        <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
+                            <CardHeader className="pb-3">
+                                <div className="flex items-center justify-between">
+                                    <Search className="h-8 w-8 text-green-600" />
+                                    <span className="text-sm text-green-600 font-medium">검색</span>
+                                </div>
+                            </CardHeader>
+                            <CardContent>
+                                <h3 className="font-semibold text-gray-900 mb-2">스마트 검색</h3>
+                                <p className="text-sm text-gray-600">
+                                    AI가 이해하는 지능형 검색으로 원하는 내용을 빠르게 찾으세요
+                                </p>
+                            </CardContent>
+                        </Card>
+                    </Link>
 
-                    <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-                        <CardHeader className="pb-3">
-                            <div className="flex items-center justify-between">
-                                <Tag className="h-8 w-8 text-purple-600" />
-                                <span className="text-sm text-purple-600 font-medium">태그</span>
-                            </div>
-                        </CardHeader>
-                        <CardContent>
-                            <h3 className="font-semibold text-gray-900 mb-2">자동 태깅</h3>
-                            <p className="text-sm text-gray-600">
-                                AI가 자동으로 관련 태그를 생성하여 노트를 체계적으로 관리하세요
-                            </p>
-                        </CardContent>
-                    </Card>
+                    <Link href="/notes">
+                        <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
+                            <CardHeader className="pb-3">
+                                <div className="flex items-center justify-between">
+                                    <Tag className="h-8 w-8 text-purple-600" />
+                                    <span className="text-sm text-purple-600 font-medium">태그</span>
+                                </div>
+                            </CardHeader>
+                            <CardContent>
+                                <h3 className="font-semibold text-gray-900 mb-2">자동 태깅</h3>
+                                <p className="text-sm text-gray-600">
+                                    AI가 자동으로 관련 태그를 생성하여 노트를 체계적으로 관리하세요
+                                </p>
+                            </CardContent>
+                        </Card>
+                    </Link>
 
-                    <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-                        <CardHeader className="pb-3">
-                            <div className="flex items-center justify-between">
-                                <Download className="h-8 w-8 text-orange-600" />
-                                <span className="text-sm text-orange-600 font-medium">내보내기</span>
-                            </div>
-                        </CardHeader>
-                        <CardContent>
-                            <h3 className="font-semibold text-gray-900 mb-2">데이터 백업</h3>
-                            <p className="text-sm text-gray-600">
-                                언제든지 노트를 내보내고 백업하여 안전하게 보관하세요
-                            </p>
-                        </CardContent>
-                    </Card>
+                    <Link href="/notes">
+                        <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
+                            <CardHeader className="pb-3">
+                                <div className="flex items-center justify-between">
+                                    <Download className="h-8 w-8 text-orange-600" />
+                                    <span className="text-sm text-orange-600 font-medium">내보내기</span>
+                                </div>
+                            </CardHeader>
+                            <CardContent>
+                                <h3 className="font-semibold text-gray-900 mb-2">데이터 백업</h3>
+                                <p className="text-sm text-gray-600">
+                                    언제든지 노트를 내보내고 백업하여 안전하게 보관하세요
+                                </p>
+                            </CardContent>
+                        </Card>
+                    </Link>
                 </div>
 
                 {/* 최근 노트 섹션 */}
@@ -198,19 +221,49 @@ export default async function HomePage() {
                         </Link>
                     </div>
                     
-                    <Card>
-                        <CardContent className="text-center py-12">
-                            <PenTool className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                            <h3 className="text-lg font-medium text-gray-900 mb-2">노트를 확인하려면</h3>
-                            <p className="text-gray-600 mb-4">모든 노트 페이지에서 확인하실 수 있습니다.</p>
-                            <Link href="/notes">
-                                <Button>
-                                    <PenTool className="h-4 w-4 mr-2" />
-                                    노트 보기
-                                </Button>
-                            </Link>
-                        </CardContent>
-                    </Card>
+                    {recentNotes.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {recentNotes.map((note) => (
+                                <Link key={note.id} href={`/notes/${note.id}`}>
+                                    <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
+                                        <CardHeader className="pb-3">
+                                            <CardTitle className="text-lg line-clamp-2">
+                                                {note.title || '제목 없음'}
+                                            </CardTitle>
+                                            <p className="text-sm text-gray-500">
+                                                {new Date(note.updated_at).toLocaleDateString('ko-KR', {
+                                                    year: 'numeric',
+                                                    month: 'short',
+                                                    day: 'numeric',
+                                                    hour: '2-digit',
+                                                    minute: '2-digit'
+                                                })}
+                                            </p>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <p className="text-sm text-gray-600 line-clamp-3">
+                                                {note.content || '내용 없음'}
+                                            </p>
+                                        </CardContent>
+                                    </Card>
+                                </Link>
+                            ))}
+                        </div>
+                    ) : (
+                        <Card>
+                            <CardContent className="text-center py-12">
+                                <PenTool className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                                <h3 className="text-lg font-medium text-gray-900 mb-2">아직 노트가 없습니다</h3>
+                                <p className="text-gray-600 mb-4">첫 번째 노트를 작성해보세요!</p>
+                                <Link href="/notes/new">
+                                    <Button>
+                                        <PenTool className="h-4 w-4 mr-2" />
+                                        새 노트 작성
+                                    </Button>
+                                </Link>
+                            </CardContent>
+                        </Card>
+                    )}
                 </div>
 
                 {/* 프로젝트 정보 섹션 */}
