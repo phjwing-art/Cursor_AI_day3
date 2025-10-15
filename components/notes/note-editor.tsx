@@ -10,11 +10,17 @@ import { SummaryDisplay } from './summary-display'
 import { SummaryLoading } from './summary-loading'
 import { SummaryError } from './summary-error'
 import { RegenerateSummaryButton } from './regenerate-summary-button'
+import { TagDisplay } from './tag-display'
+import { TagLoading } from './tag-loading'
+import { TagError } from './tag-error'
+import { RegenerateTagsButton } from './regenerate-tags-button'
+import { TagEditor } from './tag-editor'
 import { useAutoSave } from '@/lib/notes/hooks'
 import { cn } from '@/lib/utils'
 import { generateSummary, getNoteSummary } from '@/lib/notes/actions'
+import { generateTags, getNoteTags } from '@/lib/notes/tag-actions'
 import type { Note } from '@/lib/notes/queries'
-import type { Summary } from '@/lib/db/schema/notes'
+import type { Summary, Tag } from '@/lib/db/schema/notes'
 
 interface NoteEditorProps {
     note: Note
@@ -26,6 +32,10 @@ export function NoteEditor({ note, className }: NoteEditorProps) {
     const [summary, setSummary] = useState<Summary | null>(null)
     const [summaryStatus, setSummaryStatus] = useState<'idle' | 'loading' | 'error'>('idle')
     const [summaryError, setSummaryError] = useState<string>('')
+    const [tags, setTags] = useState<Tag[]>([])
+    const [tagStatus, setTagStatus] = useState<'idle' | 'loading' | 'error'>('idle')
+    const [tagError, setTagError] = useState<string>('')
+    const [isEditingTags, setIsEditingTags] = useState(false)
 
     const {
         title,
@@ -75,6 +85,41 @@ export function NoteEditor({ note, className }: NoteEditorProps) {
         loadSummary()
     }, [note.id, content])
 
+    // 태그 조회 및 자동 생성
+    useEffect(() => {
+        const loadTags = async () => {
+            try {
+                const existingTags = await getNoteTags(note.id)
+                if (existingTags.success && existingTags.tags) {
+                    setTags(existingTags.tags)
+                    setTagStatus('idle')
+                } else if (content && content.length >= 100) {
+                    // 자동으로 태그 생성
+                    setTagStatus('loading')
+                    const result = await generateTags(note.id)
+                    
+                    if (result.success) {
+                        // 태그가 생성되었으므로 다시 조회
+                        const newTags = await getNoteTags(note.id)
+                        if (newTags.success && newTags.tags) {
+                            setTags(newTags.tags)
+                            setTagStatus('idle')
+                        }
+                    } else {
+                        setTagError(result.error || '태그 생성에 실패했습니다.')
+                        setTagStatus('error')
+                    }
+                }
+            } catch (error) {
+                console.error('태그 로드 실패:', error)
+                setTagError('태그를 불러오는 중 오류가 발생했습니다.')
+                setTagStatus('error')
+            }
+        }
+
+        loadTags()
+    }, [note.id, content])
+
     const handleRegenerateSummary = async () => {
         setSummaryStatus('loading')
         setSummaryError('')
@@ -95,6 +140,51 @@ export function NoteEditor({ note, className }: NoteEditorProps) {
             setSummaryError('요약 재생성 중 오류가 발생했습니다.')
             setSummaryStatus('error')
         }
+    }
+
+    const handleRegenerateTags = async () => {
+        setTagStatus('loading')
+        setTagError('')
+        
+        try {
+            const result = await generateTags(note.id)
+            
+            if (result.success) {
+                const newTags = await getNoteTags(note.id)
+                if (newTags.success && newTags.tags) {
+                    setTags(newTags.tags)
+                    setTagStatus('idle')
+                }
+            } else {
+                setTagError(result.error || '태그 재생성에 실패했습니다.')
+                setTagStatus('error')
+            }
+        } catch (error) {
+            console.error('태그 재생성 실패:', error)
+            setTagError('태그 재생성 중 오류가 발생했습니다.')
+            setTagStatus('error')
+        }
+    }
+
+    const handleTagSuccess = (_newTags: string[]) => {
+        // 태그 편집 성공 시 태그 목록 새로고침
+        const loadTags = async () => {
+            try {
+                const result = await getNoteTags(note.id)
+                if (result.success && result.tags) {
+                    setTags(result.tags)
+                }
+            } catch (error) {
+                console.error('태그 로드 실패:', error)
+            }
+        }
+        loadTags()
+        setIsEditingTags(false)
+    }
+
+    const handleTagError = (error: string) => {
+        setTagError(error)
+        setTagStatus('error')
     }
 
     const handleTitleClick = () => {
@@ -168,6 +258,61 @@ export function NoteEditor({ note, className }: NoteEditorProps) {
                                             setSummaryStatus('error')
                                         }}
                                     />
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* 태그 섹션 */}
+                {content && content.length >= 100 && (
+                    <div className="mb-6">
+                        {tagStatus === 'loading' && <TagLoading />}
+                        {tagStatus === 'error' && (
+                            <TagError 
+                                error={tagError} 
+                                onRetry={handleRegenerateTags}
+                            />
+                        )}
+                        {tags.length > 0 && tagStatus === 'idle' && !isEditingTags && (
+                            <div className="space-y-3">
+                                <TagDisplay 
+                                    tags={tags} 
+                                    onTagClick={(tagName) => {
+                                        // 태그 클릭 시 필터링 (향후 구현)
+                                        console.log('태그 클릭:', tagName)
+                                    }}
+                                />
+                                <div className="flex justify-end gap-2">
+                                    <button
+                                        onClick={() => setIsEditingTags(true)}
+                                        className="text-sm text-blue-600 hover:text-blue-800 transition-colors"
+                                    >
+                                        태그 편집
+                                    </button>
+                                    <RegenerateTagsButton
+                                        noteId={note.id}
+                                        onSuccess={handleTagSuccess}
+                                        onError={handleTagError}
+                                    />
+                                </div>
+                            </div>
+                        )}
+                        {isEditingTags && (
+                            <div className="space-y-3">
+                                <TagEditor
+                                    noteId={note.id}
+                                    initialTags={tags}
+                                    onSuccess={handleTagSuccess}
+                                    onError={handleTagError}
+                                />
+                                <div className="flex justify-end">
+                                    <button
+                                        onClick={() => setIsEditingTags(false)}
+                                        className="text-sm text-gray-600 hover:text-gray-800 transition-colors"
+                                    >
+                                        취소
+                                    </button>
                                 </div>
                             </div>
                         )}
