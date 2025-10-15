@@ -61,3 +61,39 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* 모바일 최적화 */
+@media (max-width: 640px) {
+  .line-clamp-2 {
+    -webkit-line-clamp: 2;
+  }
+  
+  .line-clamp-3 {
+    -webkit-line-clamp: 3;
+  }
+  
+  /* 터치 친화적 버튼 크기 */
+  button, [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* 모바일에서 텍스트 크기 조정 */
+  .text-xs {
+    font-size: 0.75rem;
+  }
+  
+  .text-sm {
+    font-size: 0.875rem;
+  }
+  
+  /* 모바일에서 카드 패딩 조정 */
+  .card {
+    padding: 1rem;
+  }
+  
+  /* 모바일에서 그리드 간격 조정 */
+  .grid {
+    gap: 0.75rem;
+  }
+}

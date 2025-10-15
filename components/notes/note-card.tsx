@@ -26,13 +26,14 @@ export function NoteCard({
         <Card
             className={cn(
                 'hover:shadow-lg transition-all duration-200 cursor-pointer h-full group',
+                'sm:min-h-[180px]',
                 className
             )}
         >
             <Link href={`/notes/${note.id}`} className="block h-full">
-                <CardHeader className="pb-3">
+                <CardHeader className="pb-2 sm:pb-3 p-4 sm:p-6">
                     <div className="flex items-start justify-between gap-2">
-                        <CardTitle className="text-lg line-clamp-2 flex-1">
+                        <CardTitle className="text-base sm:text-lg line-clamp-2 flex-1">
                             <HighlightText
                                 text={note.title || '제목 없음'}
                                 highlight={searchQuery}
@@ -45,20 +46,20 @@ export function NoteCard({
                             <DeleteNoteButton noteId={note.id} />
                         </div>
                     </div>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-xs sm:text-sm text-gray-500">
                         {formatRelativeDate(note.updated_at)}
                     </p>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-4 sm:p-6 pt-0">
                     <HighlightText
                         text={getContentPreview(note.content)}
                         highlight={searchQuery}
-                        className="text-gray-700 text-sm line-clamp-3"
+                        className="text-gray-700 text-sm line-clamp-2 sm:line-clamp-3"
                     />
                 </CardContent>
             </Link>
-            <CardFooter className="pt-2 pb-4">
-                <NoteTags noteId={note.id} maxTags={3} />
+            <CardFooter className="pt-2 pb-4 px-4 sm:px-6">
+                <NoteTags noteId={note.id} maxTags={2} className="text-xs" />
             </CardFooter>
         </Card>
     )

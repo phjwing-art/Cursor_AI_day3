@@ -6,6 +6,13 @@ export const metadata: Metadata = {
   description: "지능형 메모 관리 시스템",
 };
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  themeColor: "#3b82f6",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{

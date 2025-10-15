@@ -236,9 +236,9 @@ export function NoteEditor({ note, className }: NoteEditorProps) {
 
     return (
         <div className={cn('min-h-screen bg-gray-50 dark:bg-gray-900', className)}>
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
                 {/* 헤더 */}
-                <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center justify-between mb-4 sm:mb-6">
                     <BackButton href="/notes" />
                     <div className="flex items-center gap-2">
                         <SaveStatus 
@@ -250,7 +250,7 @@ export function NoteEditor({ note, className }: NoteEditorProps) {
                 </div>
 
                 {/* 제목 편집 */}
-                <div className="mb-6">
+                <div className="mb-4 sm:mb-6">
                     {isEditingTitle ? (
                         <Input
                             value={title}
@@ -258,12 +258,12 @@ export function NoteEditor({ note, className }: NoteEditorProps) {
                             onBlur={handleTitleSubmit}
                             onKeyDown={handleTitleKeyDown}
                             placeholder="노트 제목을 입력하세요"
-                            className="text-2xl font-bold border-none shadow-none p-0 focus:ring-0"
+                            className="text-xl sm:text-2xl font-bold border-none shadow-none p-0 focus:ring-0"
                             autoFocus
                         />
                     ) : (
                         <h1
-                            className="text-2xl font-bold text-gray-900 cursor-pointer hover:bg-gray-100 p-2 rounded"
+                            className="text-xl sm:text-2xl font-bold text-gray-900 cursor-pointer hover:bg-gray-100 p-2 rounded"
                             onClick={() => setIsEditingTitle(true)}
                         >
                             {title || '제목 없음'}
