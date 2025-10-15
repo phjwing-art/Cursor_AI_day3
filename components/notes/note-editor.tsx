@@ -112,7 +112,7 @@ export function NoteEditor({ note, className }: NoteEditorProps) {
                 if (existingTags.success && existingTags.tags) {
                     setTags(existingTags.tags)
                     setTagStatus('idle')
-                } else if (content && content.length >= 100) {
+                } else if (content && content.length >= 50) {
                     // 태그 테이블이 존재하지 않는 경우를 확인
                     if (existingTags.error && existingTags.error.includes('tags 테이블이 존재하지 않습니다')) {
                         console.log('tags 테이블이 존재하지 않습니다. 태그 기능을 사용할 수 없습니다.')
@@ -299,7 +299,7 @@ export function NoteEditor({ note, className }: NoteEditorProps) {
                 )}
 
                 {/* 태그 섹션 */}
-                {content && content.length >= 100 && (
+                {content && (
                     <div className="mb-6">
                         {tagStatus === 'loading' && <TagLoading />}
                         {tagStatus === 'error' && (
@@ -308,27 +308,38 @@ export function NoteEditor({ note, className }: NoteEditorProps) {
                                 onRetry={handleRegenerateTags}
                             />
                         )}
-                        {tags.length > 0 && tagStatus === 'idle' && !isEditingTags && (
+                        {tagStatus === 'idle' && !isEditingTags && (
                             <div className="space-y-3">
-                                <TagDisplay
-                                    tags={tags}
-                                    onTagClick={(tagName) => {
-                                        // 태그 클릭 시 필터링 (향후 구현)
-                                        console.log('태그 클릭:', tagName)
-                                    }}
-                                />
-                                <div className="flex justify-end gap-2">
-                                    <button
-                                        onClick={() => setIsEditingTags(true)}
-                                        className="text-sm text-blue-600 hover:text-blue-800 transition-colors"
-                                    >
-                                        태그 편집
-                                    </button>
-                                    <RegenerateTagsButton
-                                        noteId={note.id}
-                                        onSuccess={handleTagSuccess}
-                                        onError={handleTagError}
+                                {tags.length > 0 && (
+                                    <TagDisplay
+                                        tags={tags}
+                                        onTagClick={(tagName) => {
+                                            // 태그 클릭 시 필터링 (향후 구현)
+                                            console.log('태그 클릭:', tagName)
+                                        }}
                                     />
+                                )}
+                                <div className="flex justify-between items-center">
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => setIsEditingTags(true)}
+                                            className="text-sm text-blue-600 hover:text-blue-800 transition-colors"
+                                        >
+                                            {tags.length > 0 ? '태그 편집' : '태그 추가'}
+                                        </button>
+                                        {content && content.length >= 50 && (
+                                            <RegenerateTagsButton
+                                                noteId={note.id}
+                                                onSuccess={handleTagSuccess}
+                                                onError={handleTagError}
+                                            />
+                                        )}
+                                    </div>
+                                    {tags.length === 0 && (
+                                        <span className="text-sm text-gray-500">
+                                            AI가 자동으로 태그를 생성하거나 수동으로 추가하세요
+                                        </span>
+                                    )}
                                 </div>
                             </div>
                         )}

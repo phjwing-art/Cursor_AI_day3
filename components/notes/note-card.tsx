@@ -1,9 +1,10 @@
 'use client'
 
 import Link from 'next/link'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
 import { DeleteNoteButton } from './delete-note-button'
 import { HighlightText } from './highlight-text'
+import { NoteTags } from './note-tags'
 import { formatRelativeDate, getContentPreview } from '@/lib/notes/utils'
 import { cn } from '@/lib/utils'
 import type { Note } from '@/lib/notes/queries'
@@ -56,6 +57,9 @@ export function NoteCard({
                     />
                 </CardContent>
             </Link>
+            <CardFooter className="pt-2 pb-4">
+                <NoteTags noteId={note.id} maxTags={3} />
+            </CardFooter>
         </Card>
     )
 }

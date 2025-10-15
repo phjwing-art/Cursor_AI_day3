@@ -14,13 +14,89 @@ export default async function HomePage() {
         error
     } = await supabase.auth.getUser()
 
+    // 로그인하지 않은 사용자를 위한 랜딩 페이지
     if (error || !user) {
-        redirect('/signin')
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    {/* 헤더 */}
+                    <div className="text-center mb-12">
+                        <h1 className="text-4xl font-bold text-gray-900">AI 메모장</h1>
+                        <p className="text-gray-600 mt-2">지능형 메모 관리 시스템</p>
+                    </div>
+
+                    {/* 메인 콘텐츠 */}
+                    <div className="text-center mb-16">
+                        <h2 className="text-5xl font-bold text-gray-900 mb-6">
+                            AI와 함께하는<br />
+                            <span className="text-blue-600">스마트 메모</span>
+                        </h2>
+                        <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+                            인공지능이 자동으로 요약하고 태그를 생성해주는 혁신적인 메모 관리 시스템입니다.
+                        </p>
+                    </div>
+
+                    {/* 기능 소개 */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+                        <Card className="text-center p-8">
+                            <PenTool className="h-12 w-12 text-blue-600 mx-auto mb-4" />
+                            <h3 className="text-xl font-semibold mb-3">빠른 메모 작성</h3>
+                            <p className="text-gray-600">
+                                아이디어를 즉시 기록하고 정리하세요. 언제 어디서나 접근 가능합니다.
+                            </p>
+                        </Card>
+
+                        <Card className="text-center p-8">
+                            <Search className="h-12 w-12 text-green-600 mx-auto mb-4" />
+                            <h3 className="text-xl font-semibold mb-3">AI 스마트 검색</h3>
+                            <p className="text-gray-600">
+                                AI가 이해하는 지능형 검색으로 원하는 내용을 빠르게 찾으세요.
+                            </p>
+                        </Card>
+
+                        <Card className="text-center p-8">
+                            <Tag className="h-12 w-12 text-purple-600 mx-auto mb-4" />
+                            <h3 className="text-xl font-semibold mb-3">자동 태깅</h3>
+                            <p className="text-gray-600">
+                                AI가 자동으로 관련 태그를 생성하여 노트를 체계적으로 관리하세요.
+                            </p>
+                        </Card>
+                    </div>
+
+                    {/* 액션 섹션 */}
+                    <Card className="max-w-lg mx-auto">
+                        <CardHeader className="text-center">
+                            <CardTitle className="text-2xl">지금 시작해보세요!</CardTitle>
+                            <CardDescription className="text-lg">
+                                AI 메모장으로 스마트한 메모 관리를 경험해보세요.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                            <div className="flex gap-4">
+                                <Link href="/signup" className="flex-1">
+                                    <Button className="w-full" size="lg">
+                                        무료로 시작하기
+                                    </Button>
+                                </Link>
+                                <Link href="/signin" className="flex-1">
+                                    <Button variant="outline" className="w-full" size="lg">
+                                        로그인
+                                    </Button>
+                                </Link>
+                            </div>
+                            <div className="text-center">
+                                <Link href="/auth/forgot-password" className="text-sm text-blue-600 hover:underline">
+                                    비밀번호를 잊으셨나요?
+                                </Link>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+            </div>
+        )
     }
 
-    // 노트 데이터는 클라이언트에서 로드하도록 변경
-    // 서버 사이드에서 데이터베이스 연결 문제를 피하기 위해
-
+    // 로그인된 사용자를 위한 대시보드
     return (
         <div className="min-h-screen bg-gray-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
