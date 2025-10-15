@@ -1,4 +1,5 @@
 import { SignUpForm } from '@/components/auth/signup-form'
+import { BackButton } from '@/components/ui/back-button'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 
@@ -17,11 +18,15 @@ export default async function SignUpPage() {
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
             <div className="w-full max-w-md space-y-8">
-                <div className="text-center">
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                        AI 메모장
-                    </h1>
-                    <p className="text-gray-600">똑똑한 메모 관리의 시작</p>
+                <div className="flex items-center justify-between">
+                    <BackButton href="/" />
+                    <div className="flex-1 text-center">
+                        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                            AI 메모장
+                        </h1>
+                        <p className="text-gray-600">똑똑한 메모 관리의 시작</p>
+                    </div>
+                    <div className="w-20"></div> {/* 공간 맞추기 */}
                 </div>
                 <SignUpForm />
             </div>

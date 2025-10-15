@@ -6,6 +6,7 @@ import {
     type NotesSort
 } from '@/lib/notes/queries'
 import { Button } from '@/components/ui/button'
+import { BackButton } from '@/components/ui/back-button'
 import { Plus } from 'lucide-react'
 import Link from 'next/link'
 import { NotesList } from '@/components/notes/notes-list'
@@ -64,11 +65,14 @@ export default async function NotesPage({ searchParams: searchParamsPromise }: N
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {/* 헤더 */}
                 <div className="flex items-center justify-between mb-8">
-                    <div>
-                        <h1 className="text-3xl font-bold text-gray-900">내 노트</h1>
-                        <p className="text-gray-600 mt-2">
-                            {search ? `"${search}" 검색 결과` : '모든 노트를 관리하세요'}
-                        </p>
+                    <div className="flex items-center gap-4">
+                        <BackButton href="/" />
+                        <div>
+                            <h1 className="text-3xl font-bold text-gray-900">내 노트</h1>
+                            <p className="text-gray-600 mt-2">
+                                {search ? `"${search}" 검색 결과` : '모든 노트를 관리하세요'}
+                            </p>
+                        </div>
                     </div>
                     <Link href="/notes/new">
                         <Button>

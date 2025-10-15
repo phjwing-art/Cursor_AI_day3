@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { LogoutDialog } from '@/components/auth/logout-dialog'
-import { PenTool, Search, Tag, Download } from 'lucide-react'
+import { PenTool, Search, Tag, Download, Code, Database, Zap, Shield } from 'lucide-react'
 import Link from 'next/link'
 
 export default async function HomePage() {
@@ -211,6 +211,76 @@ export default async function HomePage() {
                             </Link>
                         </CardContent>
                     </Card>
+                </div>
+
+                {/* 프로젝트 정보 섹션 */}
+                <div className="mt-16 sm:mt-20">
+                    <div className="text-center mb-8">
+                        <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
+                            AI 메모장 프로젝트
+                        </h2>
+                        <p className="text-gray-600 text-lg max-w-3xl mx-auto">
+                            인공지능을 활용한 지능형 메모 관리 시스템으로, 
+                            사용자의 메모를 자동으로 요약하고 태그를 생성하여 
+                            효율적인 정보 관리를 지원합니다.
+                        </p>
+                    </div>
+
+                    {/* 기술 스택 */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+                        <Card className="text-center p-6 hover:shadow-lg transition-shadow">
+                            <div className="flex items-center justify-center mb-4">
+                                <Code className="h-8 w-8 text-blue-600" />
+                            </div>
+                            <h3 className="font-semibold text-gray-900 mb-2">Frontend</h3>
+                            <div className="space-y-1 text-sm text-gray-600">
+                                <p>Next.js 15</p>
+                                <p>React 18</p>
+                                <p>TypeScript</p>
+                                <p>Tailwind CSS</p>
+                            </div>
+                        </Card>
+
+                        <Card className="text-center p-6 hover:shadow-lg transition-shadow">
+                            <div className="flex items-center justify-center mb-4">
+                                <Database className="h-8 w-8 text-green-600" />
+                            </div>
+                            <h3 className="font-semibold text-gray-900 mb-2">Backend & DB</h3>
+                            <div className="space-y-1 text-sm text-gray-600">
+                                <p>Supabase</p>
+                                <p>PostgreSQL</p>
+                                <p>Drizzle ORM</p>
+                                <p>Server Actions</p>
+                            </div>
+                        </Card>
+
+                        <Card className="text-center p-6 hover:shadow-lg transition-shadow">
+                            <div className="flex items-center justify-center mb-4">
+                                <Zap className="h-8 w-8 text-purple-600" />
+                            </div>
+                            <h3 className="font-semibold text-gray-900 mb-2">AI & ML</h3>
+                            <div className="space-y-1 text-sm text-gray-600">
+                                <p>Google Gemini</p>
+                                <p>AI 요약</p>
+                                <p>자동 태깅</p>
+                                <p>스마트 검색</p>
+                            </div>
+                        </Card>
+
+                        <Card className="text-center p-6 hover:shadow-lg transition-shadow">
+                            <div className="flex items-center justify-center mb-4">
+                                <Shield className="h-8 w-8 text-orange-600" />
+                            </div>
+                            <h3 className="font-semibold text-gray-900 mb-2">Security & Deploy</h3>
+                            <div className="space-y-1 text-sm text-gray-600">
+                                <p>Row Level Security</p>
+                                <p>JWT Authentication</p>
+                                <p>Vercel</p>
+                                <p>HTTPS</p>
+                            </div>
+                        </Card>
+                    </div>
+
                 </div>
             </div>
         </div>

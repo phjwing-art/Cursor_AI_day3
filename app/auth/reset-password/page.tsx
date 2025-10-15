@@ -11,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { BackButton } from '@/components/ui/back-button'
 import { Lock, Loader2, Eye, EyeOff } from 'lucide-react'
 import Link from 'next/link'
 import { updatePassword, signOut } from '@/lib/auth/actions'
