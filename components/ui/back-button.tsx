@@ -1,38 +1,22 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
-import { Button } from './button'
+import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
+import { Button } from './button'
+import { cn } from '@/lib/utils'
 
 interface BackButtonProps {
-    fallbackUrl?: string
+    href: string
     className?: string
 }
 
-export function BackButton({
-    fallbackUrl = '/notes',
-    className
-}: BackButtonProps) {
-    const router = useRouter()
-
-    const handleBack = () => {
-        // history가 있으면 뒤로가기, 없으면 fallback URL로 이동
-        if (window.history.length > 1) {
-            router.back()
-        } else {
-            router.push(fallbackUrl)
-        }
-    }
-
+export function BackButton({ href, className }: BackButtonProps) {
     return (
-        <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleBack}
-            className={className}
-        >
-            <ArrowLeft className="h-4 w-4" />
-            돌아가기
-        </Button>
+        <Link href={href}>
+            <Button variant="outline" className={cn('gap-2', className)}>
+                <ArrowLeft className="h-4 w-4" />
+                뒤로가기
+            </Button>
+        </Link>
     )
 }

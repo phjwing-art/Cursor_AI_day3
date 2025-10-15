@@ -1,36 +1,71 @@
 'use client'
 
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { useCallback } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { Button } from '@/components/ui/button'
+import { ArrowUpDown, Calendar, Clock, Type } from 'lucide-react'
+import { NotesSort } from '@/lib/notes/queries'
 
-export function NotesSortControl({ currentSort }: { currentSort: string }) {
+interface NotesSortProps {
+    currentSort: NotesSort
+    className?: string
+}
+
+export function NotesSort({ currentSort, className = '' }: NotesSortProps) {
     const router = useRouter()
-    const pathname = usePathname()
     const searchParams = useSearchParams()
 
-    const onChange = useCallback(
-        (event: React.ChangeEvent<HTMLSelectElement>) => {
-            const nextSort = event.target.value
-            const params = new URLSearchParams(searchParams?.toString())
-            params.set('sort', nextSort)
-            params.set('page', '1')
-            router.replace(`${pathname}?${params.toString()}`)
+    const sortOptions = [
+        {
+            value: 'newest' as NotesSort,
+            label: '최신순',
+            icon: Calendar
         },
-        [router, pathname, searchParams]
-    )
+        {
+            value: 'oldest' as NotesSort,
+            label: '오래된순',
+            icon: Clock
+        },
+        {
+            value: 'title' as NotesSort,
+            label: '제목순',
+            icon: Type
+        }
+    ]
+
+    const handleSortChange = (sort: NotesSort) => {
+        const params = new URLSearchParams(searchParams.toString())
+        params.set('sort', sort)
+        params.delete('page') // 정렬 변경 시 첫 페이지로
+        router.push(`/notes?${params.toString()}`)
+    }
 
     return (
-        <label className="text-sm text-gray-700 inline-flex items-center gap-2">
-            정렬:
-            <select
-                className="border rounded-md px-2 py-1 text-sm"
-                value={currentSort}
-                onChange={onChange}
-            >
-                <option value="newest">최신순</option>
-                <option value="oldest">오래된순</option>
-                <option value="title">제목순</option>
-            </select>
-        </label>
+        <div className={`flex items-center gap-2 ${className}`}>
+            <ArrowUpDown className="h-4 w-4 text-gray-500" />
+            <span className="text-sm text-gray-600">정렬:</span>
+            <div className="flex gap-1">
+                {sortOptions.map((option) => {
+                    const Icon = option.icon
+                    const isActive = currentSort === option.value
+                    
+                    return (
+                        <Button
+                            key={option.value}
+                            variant={isActive ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => handleSortChange(option.value)}
+                            className={`gap-1 ${
+                                isActive 
+                                    ? 'bg-blue-600 text-white' 
+                                    : 'text-gray-600 hover:text-gray-900'
+                            }`}
+                        >
+                            <Icon className="h-3 w-3" />
+                            {option.label}
+                        </Button>
+                    )
+                })}
+            </div>
+        </div>
     )
 }

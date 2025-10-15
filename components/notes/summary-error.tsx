@@ -1,11 +1,8 @@
-// components/notes/summary-error.tsx
-// 요약 생성 에러 상태 컴포넌트
-
 'use client'
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { AlertTriangle, RefreshCw } from 'lucide-react'
+import { AlertCircle, RefreshCw, FileText } from 'lucide-react'
 
 interface SummaryErrorProps {
     error: string
@@ -14,27 +11,31 @@ interface SummaryErrorProps {
 
 export function SummaryError({ error, onRetry }: SummaryErrorProps) {
     return (
-        <Card className="border-l-4 border-l-red-500">
+        <Card className="bg-red-50 border-red-200">
             <CardHeader className="pb-3">
-                <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                    <AlertTriangle className="w-5 h-5 text-red-600" />
-                    요약 생성 실패
+                <CardTitle className="text-red-900 text-sm font-medium flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    AI 요약
                 </CardTitle>
             </CardHeader>
-            <CardContent>
-                <div className="space-y-3">
-                    <p className="text-gray-700">{error}</p>
-                    {onRetry && (
-                        <Button 
-                            onClick={onRetry} 
-                            variant="outline" 
-                            size="sm"
-                            className="flex items-center gap-2"
-                        >
-                            <RefreshCw className="w-4 h-4" />
-                            다시 시도
-                        </Button>
-                    )}
+            <CardContent className="pt-0">
+                <div className="flex items-start gap-3">
+                    <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                        <p className="text-sm text-red-700 font-medium mb-1">요약 생성 실패</p>
+                        <p className="text-xs text-red-600 mb-3">{error}</p>
+                        {onRetry && (
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={onRetry}
+                                className="text-red-600 border-red-300 hover:bg-red-50"
+                            >
+                                <RefreshCw className="h-4 w-4 mr-1" />
+                                재시도
+                            </Button>
+                        )}
+                    </div>
                 </div>
             </CardContent>
         </Card>

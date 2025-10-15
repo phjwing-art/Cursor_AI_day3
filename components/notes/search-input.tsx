@@ -1,127 +1,72 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
-import { useRouter, useSearchParams, usePathname } from 'next/navigation'
-import { Search, X } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Input } from '@/components/ui/input'
+import { Search, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { debounce } from '@/lib/utils/debounce'
-import { cn } from '@/lib/utils'
+import { useDebounce } from '@/lib/utils/debounce'
 
 interface SearchInputProps {
-    className?: string
+    defaultValue?: string
     placeholder?: string
+    className?: string
 }
 
-const SEARCH_DELAY = 300
-
-export function SearchInput({
-    className,
-    placeholder = '노트 검색...'
+export function SearchInput({ 
+    defaultValue = '', 
+    placeholder = '노트 검색...',
+    className = ''
 }: SearchInputProps) {
     const router = useRouter()
-    const pathname = usePathname()
     const searchParams = useSearchParams()
+    const [query, setQuery] = useState(defaultValue)
+    const debouncedQuery = useDebounce(query, 500)
 
-    // 완전히 로컬 상태로 관리하여 깜빡임 방지
-    const [searchValue, setSearchValue] = useState('')
-    const isInitializedRef = useRef(false)
-    const currentSearchRef = useRef('')
-
-    // 컴포넌트 마운트 시 한 번만 URL에서 초기값 가져오기
     useEffect(() => {
-        if (!isInitializedRef.current) {
-            const urlSearch = searchParams.get('search') || ''
-            setSearchValue(urlSearch)
-            currentSearchRef.current = urlSearch
-            isInitializedRef.current = true
-        }
-    }, [searchParams])
-
-    // URL 업데이트 함수
-    const updateURL = useCallback(
-        (query: string) => {
-            // 현재 검색어와 같으면 업데이트하지 않음
-            if (currentSearchRef.current === query) return
-
-            currentSearchRef.current = query
+        if (debouncedQuery !== defaultValue) {
             const params = new URLSearchParams(searchParams.toString())
-
-            if (query.trim()) {
-                params.set('search', query.trim())
+            
+            if (debouncedQuery.trim()) {
+                params.set('search', debouncedQuery.trim())
+                params.delete('page') // 검색 시 첫 페이지로
             } else {
                 params.delete('search')
             }
-
-            params.set('page', '1')
-            router.replace(`${pathname}?${params.toString()}`)
-        },
-        [router, pathname, searchParams]
-    )
-
-    // debounced 검색 함수 - 참조 안정성 확보
-    const debouncedSearchRef = useRef(
-        debounce((query: string) => updateURL(query), SEARCH_DELAY)
-    )
-
-    // updateURL이 변경될 때마다 debounced 함수 업데이트
-    useEffect(() => {
-        debouncedSearchRef.current = debounce(updateURL, SEARCH_DELAY)
-    }, [updateURL])
-
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value
-        setSearchValue(value) // 즉시 로컬 상태 업데이트
-        debouncedSearchRef.current(value) // debounced URL 업데이트
-    }
+            
+            router.push(`/notes?${params.toString()}`)
+        }
+    }, [debouncedQuery, router, searchParams, defaultValue])
 
     const handleClear = () => {
-        setSearchValue('')
-        currentSearchRef.current = ''
-        // 즉시 URL 업데이트 (debounce 없이)
+        setQuery('')
         const params = new URLSearchParams(searchParams.toString())
         params.delete('search')
-        params.set('page', '1')
-        router.replace(`${pathname}?${params.toString()}`)
-    }
-
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (e.key === 'Escape') {
-            handleClear()
-        }
+        router.push(`/notes?${params.toString()}`)
     }
 
     return (
-        <div className={cn('relative', className)}>
+        <div className={`relative ${className}`}>
             <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
                     type="text"
-                    value={searchValue}
-                    onChange={handleInputChange}
-                    onKeyDown={handleKeyDown}
                     placeholder={placeholder}
-                    className="pl-9 pr-9"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    className="pl-10 pr-10"
                 />
-                {searchValue && (
+                {query && (
                     <Button
                         variant="ghost"
                         size="sm"
-                        className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 p-0"
                         onClick={handleClear}
-                        title="검색어 지우기"
+                        className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 hover:bg-gray-100"
                     >
-                        <X className="h-3 w-3" />
+                        <X className="h-4 w-4" />
                     </Button>
                 )}
             </div>
-
-            {/* 검색 힌트 - 더 부드러운 표시 */}
-            {searchValue && (
-                <div className="mt-1 text-xs text-muted-foreground">
-                    &apos;{searchValue}&apos; 검색 중...
-                </div>
-            )}
         </div>
     )
 }

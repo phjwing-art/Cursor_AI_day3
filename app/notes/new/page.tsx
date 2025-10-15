@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { NoteForm } from '@/components/notes/note-form'
+import { NoteEditor } from '@/components/notes/note-editor'
 
 export default async function NewNotePage() {
     // 로그인 확인
@@ -14,16 +14,21 @@ export default async function NewNotePage() {
         redirect('/signin')
     }
 
-    return (
-        <div className="min-h-screen bg-gray-50">
-            <div className="max-w-7xl mx-auto">
-                <NoteForm />
-            </div>
-        </div>
-    )
-}
+    // 새 노트 생성
+    const { data: newNote, error: createError } = await supabase
+        .from('notes')
+        .insert({
+            title: '',
+            content: '',
+            user_id: user.id
+        })
+        .select()
+        .single()
 
-export const metadata = {
-    title: '새 노트 작성 - AI 메모장',
-    description: '새로운 노트를 작성하세요'
+    if (createError || !newNote) {
+        console.error('새 노트 생성 실패:', createError)
+        redirect('/notes')
+    }
+
+    return <NoteEditor note={newNote} />
 }
