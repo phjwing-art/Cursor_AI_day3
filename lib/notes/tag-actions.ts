@@ -1,96 +1,57 @@
-// lib/notes/tag-actions.ts
-// 태그 관련 서버 액션들
+'use server'
 
 import { createClient } from '@/lib/supabase/server'
 import { GeminiClient } from '@/lib/ai'
 import { estimateTokens, validateTokenLimit } from '@/lib/ai/utils'
-// import { GeminiError, GeminiErrorType } from '@/lib/ai/errors'
+import { insertTagSchema, selectTagSchema } from '@/lib/db/schema/notes'
+import { z } from 'zod'
+import { revalidatePath } from 'next/cache'
 
-// 태그 생성 서버 액션
+const TAG_PROMPT = `
+다음 노트 내용을 분석하여 관련성 높은 태그를 최대 6개까지 생성해주세요.
+태그는 한국어로 작성하고, 노트의 핵심 주제와 키워드를 반영해주세요.
+
+노트 내용:
+{noteContent}
+
+태그 (쉼표로 구분):
+`
+
 export async function generateTags(noteId: string) {
     try {
         const supabase = await createClient()
 
-        // 사용자 인증 확인
-        const {
-            data: { user },
-            error: userError
-        } = await supabase.auth.getUser()
-
+        const { data: { user }, error: userError } = await supabase.auth.getUser()
         if (userError || !user) {
-            return {
-                success: false,
-                error: '인증이 필요합니다.'
-            }
+            return { success: false, error: '인증이 필요합니다.' }
         }
 
-        // 노트 조회
         const { data: note, error: noteError } = await supabase
             .from('notes')
-            .select('*')
+            .select('id, content')
             .eq('id', noteId)
             .eq('user_id', user.id)
             .single()
 
         if (noteError || !note) {
-            return {
-                success: false,
-                error: '노트를 찾을 수 없습니다.'
-            }
+            return { success: false, error: '노트를 찾을 수 없습니다.' }
         }
 
-        // 노트 내용 검증 (100자 이상)
         if (!note.content || note.content.length < 100) {
-            return {
-                success: false,
-                error: '노트 내용이 100자 이상이어야 태그를 생성할 수 있습니다.'
-            }
+            return { success: false, error: '노트 내용이 100자 이상이어야 태그를 생성할 수 있습니다.' }
         }
 
-        // 토큰 수 검증
         const inputTokens = estimateTokens(note.content)
         if (!validateTokenLimit(inputTokens)) {
-            return {
-                success: false,
-                error: '노트가 너무 길어서 태그를 생성할 수 없습니다.'
-            }
+            return { success: false, error: '노트가 너무 길어서 태그를 생성할 수 없습니다.' }
         }
 
-        // Gemini API 호출
         let result: { text: string; usage?: unknown; finishReason?: unknown }
         try {
-            // 환경 변수 직접 확인
-            console.log('태그 생성 서버 액션에서 환경 변수 확인:', {
-                GEMINI_API_KEY: process.env.GEMINI_API_KEY ? '설정됨' : '없음',
-                NODE_ENV: process.env.NODE_ENV
-            })
-
-            // 환경 변수가 없으면 직접 설정 (임시 방편)
-            if (!process.env.GEMINI_API_KEY) {
-                console.log('환경 변수 직접 설정...')
-                process.env.GEMINI_API_KEY = 'AIzaSyCZyyz1kkLoEwrBgDs0Kb30LX8bbpxTLNI'
-                process.env.GEMINI_MODEL = 'gemini-2.0-flash-001'
-                process.env.GEMINI_MAX_TOKENS = '8192'
-                process.env.GEMINI_TIMEOUT_MS = '10000'
-                process.env.GEMINI_DEBUG = 'true'
-                console.log('환경 변수 설정 후:', {
-                    GEMINI_API_KEY: process.env.GEMINI_API_KEY ? '설정됨' : '없음'
-                })
-            }
+            console.log('태그 생성 시작:', { noteId, contentLength: note.content.length })
 
             const geminiClient = new GeminiClient()
-
-            const tagPrompt = `
-다음 노트 내용을 분석하여 관련성 높은 태그를 최대 6개까지 생성해주세요.
-태그는 한국어로 작성하고, 노트의 핵심 주제와 키워드를 반영해주세요.
-
-노트 내용:
-${note.content}
-
-태그 (쉼표로 구분):
-`
-
-            console.log('태그 생성 시작:', { noteId, contentLength: note.content.length })
+            const tagPrompt = TAG_PROMPT.replace('{noteContent}', note.content)
 
             result = await geminiClient.generateText({
                 prompt: tagPrompt,
@@ -111,17 +72,23 @@ ${note.content}
         // 태그 파싱 및 저장
         console.log('태그 저장 시작:', { noteId, tagsText: result.text })
 
-        // 기존 태그 삭제
+        // 기존 태그 삭제 (테이블이 존재하지 않을 수 있으므로 에러 무시)
         const { error: deleteError } = await supabase
             .from('tags')
             .delete()
             .eq('note_id', noteId)
 
         if (deleteError) {
-            console.error('기존 태그 삭제 실패:', deleteError)
-            return {
-                success: false,
-                error: `기존 태그 삭제 중 오류가 발생했습니다: ${deleteError.message}`
+            console.log('기존 태그 삭제 중 오류 (테이블이 존재하지 않을 수 있음):', deleteError)
+            // 테이블이 존재하지 않는 경우는 무시하고 계속 진행
+            if (deleteError.code === 'PGRST116' || deleteError.message?.includes('relation "tags" does not exist')) {
+                console.log('tags 테이블이 존재하지 않습니다. 새로 생성합니다.')
+            } else {
+                console.error('기존 태그 삭제 실패:', deleteError)
+                return {
+                    success: false,
+                    error: `기존 태그 삭제 중 오류가 발생했습니다: ${deleteError.message}`
+                }
             }
         }
 
@@ -151,6 +118,16 @@ ${note.content}
 
         if (insertError) {
             console.error('태그 저장 실패:', insertError)
+            
+            // 테이블이 존재하지 않는 경우
+            if (insertError.code === 'PGRST116' || insertError.message?.includes('relation "tags" does not exist')) {
+                console.log('tags 테이블이 존재하지 않습니다. 테이블을 먼저 생성해주세요.')
+                return {
+                    success: false,
+                    error: 'tags 테이블이 존재하지 않습니다. 데이터베이스에 tags 테이블을 생성해주세요.'
+                }
+            }
+            
             return {
                 success: false,
                 error: `태그 저장 중 오류가 발생했습니다: ${insertError.message}`
@@ -161,161 +138,129 @@ ${note.content}
 
         // 페이지 캐시 무효화 (서버 컴포넌트에서만 실행)
         if (typeof window === 'undefined') {
-            const { revalidatePath } = await import('next/cache')
             revalidatePath(`/notes/${noteId}`)
             revalidatePath('/notes')
         }
 
-        return {
-            success: true,
-            tags: tagNames,
-            usage: result.usage
-        }
+        return { success: true, tags: tagNames, usage: result.usage }
     } catch (error) {
         console.error('태그 생성 서버 액션 오류:', error)
-        return {
-            success: false,
-            error: `태그 생성 중 예상치 못한 오류가 발생했습니다: ${error instanceof Error ? error.message : '알 수 없는 오류'}`
-        }
+        return { success: false, error: `태그 생성 중 예상치 못한 오류가 발생했습니다: ${error instanceof Error ? error.message : '알 수 없는 오류'}` }
     }
 }
 
-// 태그 재생성 서버 액션
 export async function regenerateTags(noteId: string) {
+    // 기존 태그 삭제 후 generateTags 호출
+    const supabase = await createClient()
+    await supabase.from('tags').delete().eq('note_id', noteId)
     return generateTags(noteId)
 }
 
-// 노트 태그 조회 서버 액션
 export async function getNoteTags(noteId: string) {
-    try {
-        const supabase = await createClient()
+    const supabase = await createClient()
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    if (userError || !user) {
+        return { success: false, error: '인증이 필요합니다.' }
+    }
 
-        // 사용자 인증 확인
-        const {
-            data: { user },
-            error: userError
-        } = await supabase.auth.getUser()
+    // 태그 조회
+    const { data: tags, error: tagsError } = await supabase
+        .from('tags')
+        .select('*')
+        .eq('note_id', noteId)
+        .order('created_at', { ascending: true })
 
-        if (userError || !user) {
+    if (tagsError) {
+        console.error('태그 조회 실패:', {
+            error: tagsError,
+            noteId,
+            message: tagsError.message,
+            details: tagsError.details,
+            hint: tagsError.hint,
+            code: tagsError.code
+        })
+        
+        // 테이블이 존재하지 않는 경우
+        if (tagsError.code === 'PGRST116' || tagsError.message?.includes('relation "tags" does not exist')) {
+            console.log('tags 테이블이 존재하지 않습니다. 빈 배열을 반환합니다.')
             return {
-                success: false,
-                error: '인증이 필요합니다.'
+                success: true,
+                tags: []
             }
         }
-
-        // 태그 조회
-        const { data: tags, error: tagsError } = await supabase
-            .from('tags')
-            .select('*')
-            .eq('note_id', noteId)
-            .order('created_at', { ascending: true })
-
-        if (tagsError) {
-            console.error('태그 조회 실패:', tagsError)
-            return {
-                success: false,
-                error: `태그 조회 중 오류가 발생했습니다: ${tagsError.message}`
-            }
-        }
-
-        return {
-            success: true,
-            tags: tags || []
-        }
-    } catch (error) {
-        console.error('태그 조회 서버 액션 오류:', error)
+        
         return {
             success: false,
-            error: `태그 조회 중 예상치 못한 오류가 발생했습니다: ${error instanceof Error ? error.message : '알 수 없는 오류'}`
+            error: `태그 조회 중 오류가 발생했습니다: ${tagsError.message || '알 수 없는 오류'}`
         }
+    }
+
+    return {
+        success: true,
+        tags: tags || []
     }
 }
 
-// 태그 업데이트 서버 액션
-export async function updateTags(noteId: string, tagNames: string[]) {
-    try {
-        const supabase = await createClient()
+export async function updateTags(noteId: string, newTagNames: string[]) {
+    const supabase = await createClient()
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    if (userError || !user) {
+        return { success: false, error: '인증이 필요합니다.' }
+    }
 
-        // 사용자 인증 확인
-        const {
-            data: { user },
-            error: userError
-        } = await supabase.auth.getUser()
+    const validatedTags = z.array(z.string().min(1).max(50)).parse(newTagNames)
 
-        if (userError || !user) {
+    // 기존 태그 삭제 (테이블이 존재하지 않을 수 있으므로 에러 무시)
+    const { error: deleteError } = await supabase
+        .from('tags')
+        .delete()
+        .eq('note_id', noteId)
+
+    if (deleteError) {
+        console.log('기존 태그 삭제 중 오류 (테이블이 존재하지 않을 수 있음):', deleteError)
+        // 테이블이 존재하지 않는 경우는 무시하고 계속 진행
+        if (deleteError.code === 'PGRST116' || deleteError.message?.includes('relation "tags" does not exist')) {
+            console.log('tags 테이블이 존재하지 않습니다. 새로 생성합니다.')
+        } else {
+            console.error('태그 삭제 실패:', deleteError)
             return {
                 success: false,
-                error: '인증이 필요합니다.'
+                error: `태그 삭제 중 오류가 발생했습니다: ${deleteError.message}`
             }
-        }
-
-        // 노트 소유권 확인
-        const { data: note, error: noteError } = await supabase
-            .from('notes')
-            .select('id')
-            .eq('id', noteId)
-            .eq('user_id', user.id)
-            .single()
-
-        if (noteError || !note) {
-            return {
-                success: false,
-                error: '노트를 찾을 수 없습니다.'
-            }
-        }
-
-        // 기존 태그 삭제
-        const { error: deleteError } = await supabase
-            .from('tags')
-            .delete()
-            .eq('note_id', noteId)
-
-        if (deleteError) {
-            console.error('기존 태그 삭제 실패:', deleteError)
-            return {
-                success: false,
-                error: `기존 태그 삭제 중 오류가 발생했습니다: ${deleteError.message}`
-            }
-        }
-
-        // 새 태그 저장
-        if (tagNames.length > 0) {
-            const tagsToInsert = tagNames.map(name => ({
-                note_id: noteId,
-                name: name.trim()
-            })).filter(tag => tag.name.length > 0)
-
-            if (tagsToInsert.length > 0) {
-                const { error: insertError } = await supabase
-                    .from('tags')
-                    .insert(tagsToInsert)
-
-                if (insertError) {
-                    console.error('태그 저장 실패:', insertError)
-                    return {
-                        success: false,
-                        error: `태그 저장 중 오류가 발생했습니다: ${insertError.message}`
-                    }
-                }
-            }
-        }
-
-        // 페이지 캐시 무효화 (서버 컴포넌트에서만 실행)
-        if (typeof window === 'undefined') {
-            const { revalidatePath } = await import('next/cache')
-            revalidatePath(`/notes/${noteId}`)
-            revalidatePath('/notes')
-        }
-
-        return {
-            success: true,
-            tags: tagNames
-        }
-    } catch (error) {
-        console.error('태그 업데이트 서버 액션 오류:', error)
-        return {
-            success: false,
-            error: `태그 업데이트 중 예상치 못한 오류가 발생했습니다: ${error instanceof Error ? error.message : '알 수 없는 오류'}`
         }
     }
+
+    // 새 태그 삽입
+    if (validatedTags.length > 0) {
+        const tagsToInsert = validatedTags.map(tagName => ({
+            note_id: noteId,
+            name: tagName
+        }))
+        const { error: insertError } = await supabase.from('tags').insert(tagsToInsert)
+        if (insertError) {
+            console.error('태그 업데이트 실패:', insertError)
+            
+            // 테이블이 존재하지 않는 경우
+            if (insertError.code === 'PGRST116' || insertError.message?.includes('relation "tags" does not exist')) {
+                console.log('tags 테이블이 존재하지 않습니다. 테이블을 먼저 생성해주세요.')
+                return {
+                    success: false,
+                    error: 'tags 테이블이 존재하지 않습니다. 데이터베이스에 tags 테이블을 생성해주세요.'
+                }
+            }
+            
+            return {
+                success: false,
+                error: `태그 업데이트 중 오류가 발생했습니다: ${insertError.message}`
+            }
+        }
+    }
+
+    // 페이지 캐시 무효화 (서버 컴포넌트에서만 실행)
+    if (typeof window === 'undefined') {
+        revalidatePath(`/notes/${noteId}`)
+        revalidatePath('/notes')
+    }
+
+    return { success: true }
 }

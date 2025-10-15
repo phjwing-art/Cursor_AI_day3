@@ -1,6 +1,3 @@
-// components/notes/regenerate-tags-button.tsx
-// 태그 재생성 버튼 컴포넌트
-
 'use client'
 
 import { useState } from 'react'
@@ -12,33 +9,25 @@ interface RegenerateTagsButtonProps {
     noteId: string
     onSuccess?: (tags: string[]) => void
     onError?: (error: string) => void
-    className?: string
 }
 
-export function RegenerateTagsButton({ 
-    noteId, 
-    onSuccess, 
-    onError, 
-    className = '' 
-}: RegenerateTagsButtonProps) {
-    const [isLoading, setIsLoading] = useState(false)
+export function RegenerateTagsButton({ noteId, onSuccess, onError }: RegenerateTagsButtonProps) {
+    const [isRegenerating, setIsRegenerating] = useState(false)
 
     const handleRegenerate = async () => {
-        setIsLoading(true)
-        
+        setIsRegenerating(true)
         try {
             const result = await regenerateTags(noteId)
-            
             if (result.success) {
                 onSuccess?.(result.tags || [])
             } else {
                 onError?.(result.error || '태그 재생성에 실패했습니다.')
             }
         } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.'
-            onError?.(errorMessage)
+            console.error('태그 재생성 실패:', error)
+            onError?.('태그 재생성 중 오류가 발생했습니다.')
         } finally {
-            setIsLoading(false)
+            setIsRegenerating(false)
         }
     }
 
@@ -47,11 +36,11 @@ export function RegenerateTagsButton({
             variant="outline"
             size="sm"
             onClick={handleRegenerate}
-            disabled={isLoading}
-            className={className}
+            disabled={isRegenerating}
+            className="text-blue-600 border-blue-300 hover:bg-blue-50"
         >
-            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-            {isLoading ? '재생성 중...' : '태그 재생성'}
+            <RefreshCw className={`h-4 w-4 mr-1 ${isRegenerating ? 'animate-spin' : ''}`} />
+            {isRegenerating ? '재생성 중...' : '태그 재생성'}
         </Button>
     )
 }

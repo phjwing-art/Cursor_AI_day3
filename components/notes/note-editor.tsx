@@ -94,6 +94,13 @@ export function NoteEditor({ note, className }: NoteEditorProps) {
                     setTags(existingTags.tags)
                     setTagStatus('idle')
                 } else if (content && content.length >= 100) {
+                    // 태그 테이블이 존재하지 않는 경우를 확인
+                    if (existingTags.error && existingTags.error.includes('tags 테이블이 존재하지 않습니다')) {
+                        console.log('tags 테이블이 존재하지 않습니다. 태그 기능을 사용할 수 없습니다.')
+                        setTagStatus('idle')
+                        return
+                    }
+                    
                     // 자동으로 태그 생성
                     setTagStatus('loading')
                     const result = await generateTags(note.id)
